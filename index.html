@@ -106,6 +106,7 @@ label{
 			scene.getElementsByTagName('div')[this.id].style.animationPlayState=this.state;
 			if (this.destroy==1) {
 				scene.getElementsByTagName('div')[this.id].style.display="none";
+				control.getElementsByTagName('div')[this.id-1].style.display="none";
 				clearInterval(this.int1);
 				clearInterval(this.int2);
 			}
