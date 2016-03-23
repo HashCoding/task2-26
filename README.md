@@ -1,2 +1,2 @@
 # task2-26
-# ÑİÊ¾:[ÕâÀï](http://HashCoding.github.io/task2-26/task26.html)
+# æ¼”ç¤º:[è¿™é‡Œ](http://HashCoding.github.io/task2-26/task-26.html)
