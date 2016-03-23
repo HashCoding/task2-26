@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+<style>
+body{
+	background-color: #000;
+	font-size: 14px;
+}
+#scene{
+	position: relative;
+	width: 500px;
+	margin:0 auto;
+
+	margin-top: 100px;
+}
+#control{
+	width: 500px;
+	margin:0 auto;
+	margin-top: 100px;
+	border: 1px solid white;
+}
+label{
+	color: white;
+}
+	#star{
+		/*position: absolute;*/
+		margin:0 auto;
+		margin-top: 100px;
+		 width: 300px;
+	    height: 300px;
+	    background: blue;
+	    -moz-border-radius: 150px;
+	    -webkit-border-radius: 150px;
+	    border-radius: 150px;
+	}
+
+	.ship{
+		position: absolute;
+		margin:0px auto;
+		margin-left: 210px;
+		width: 80px;
+		margin-top: -175px;
+		height: 50px;
+		background: white;
+		font-size: 14px;
+		
+		/*border: 1px solid white;*/
+		animation: action 10s linear 0s infinite;
+		animation-play-state:paused;
+		-webkit-animation-play-state:paused;
+		}
+
+	@keyframes action {
+
+		from {
+
+			transform: rotate(0deg)  translate(200px) ;
+
+		}
+
+		to {
+
+			transform: rotate(360deg) translate(200px) ;
+
+		}
+
+	}
+</style>
+</head>
+<body>
+<div id="scene">
+	<div id="star"></div>
+</div>
+	<div id="control">
+
+		<button id="btn">建造新飞船</button>
+	</div>
+<script>
+	var scene=document.getElementById('scene');
+	var control=document.getElementById('control');
+	var createbtn=document.getElementById('btn');
+	var ships=[];
+
+	var protoship={
+		speed:10,
+		energy:100,
+		state:"paused",
+		recoverspeed:2,
+		expendspeed:5,
+		destroy:0,
+		acceptor:function (signal) {//指令接收器
+			if (signal.id==this.id) {
+				this.state=signal.state;
+				if (signal.destroy) {
+					this.destroy=signal.destroy;
+				}
+				this.cpu();
+			}
+		},
+		cpu:function () {//指令处理器
+			if (this.energy<5) {
+				this.state="paused";
+			};
+			scene.getElementsByTagName('div')[this.id].style.animationPlayState=this.state;
+			if (this.destroy==1) {
+				scene.getElementsByTagName('div')[this.id].style.display="none";
+				clearInterval(this.int1);
+				clearInterval(this.int2);
+			}
+		}
+	}
+	var ship=function () {
+		this.id=scene.getElementsByTagName('div').length;
+		var that=this;
+		function createship() {
+			var ship_element=document.createElement('div');
+			ship_element.className="ship";
+			scene.appendChild(ship_element);
+		};
+		function createcontrol(argument) {
+			var textnode1=document.createTextNode("对"+that.id+"号飞船下达命令:");
+			var textnode2=document.createTextNode("开始飞行");
+			var textnode3=document.createTextNode("停止飞行");
+			var textnode4=document.createTextNode("销毁");
+
+			var control_element=document.createElement('div');
+			control_element.className="shipcontrol"+that.id;
+			control.appendChild(control_element);
+
+			var label_element=document.createElement('label');
+			label_element.appendChild(textnode1);
+			control_element.appendChild(label_element);
+
+			var button_element1=document.createElement('button');
+			button_element1.className="btn1";
+			button_element1.appendChild(textnode2);
+			control_element.appendChild(button_element1);
+
+			var button_element2=document.createElement('button');
+			button_element2.className="btn2";
+			button_element2.appendChild(textnode3);
+			control_element.appendChild(button_element2);
+
+			var button_element3=document.createElement('button');
+			button_element3.className="btn3";
+			button_element3.appendChild(textnode4);
+			control_element.appendChild(button_element3);
+		}
+		
+		this.expend=function () {
+			//能源消耗
+			if (that.energy<5) {
+				that.state="paused";
+				that.cpu();
+			}
+		
+			if (that.state=="running") {
+				that.energy-=that.expendspeed;
+			}
+
+		};
+		this.recover=function () {
+			//能源恢复
+			if (that.energy<100) {
+				that.energy+=that.recoverspeed;
+			}
+			scene.getElementsByTagName('div')[that.id].innerHTML=that.id+"号-"+that.energy+"%";
+		};
+		this.int1=setInterval(this.expend,1000);
+		this.int2=setInterval(this.recover,1000);
+		createship();
+		createcontrol();
+	}
+	ship.prototype=protoship;
+	
+	ships.push(new ship());//默认两艘飞船
+	ships.push(new ship());
+	var num=2;//飞船数量，起始为2
+	//signal
+	var signal=function (id,argument) {
+		this.id=id;
+		if (argument==0||argument==1) {
+			this.destroy=argument;
+		}else{
+			this.state=argument;
+		}
+	
+		
+	}
+	//Mediator
+	var Mediator=function (sign) {
+		var me=Math.random()*100;//模拟30%丢包率
+		if (me>=30) {
+			for (var i = 0; i < ships.length; i++) {
+				ships[i].acceptor(sign);
+			}
+		}
+	}
+
+	//新建飞船
+	createbtn.onclick=function (argument) {
+		if (num<4) {
+			ships.push(new ship());
+			num+=1;
+		}
+		
+		controlf();
+	}
+
+	//control
+	function controlf(argument) {
+		var controls=control.getElementsByTagName('div');
+		for (var i = 0; i < controls.length; i++) {
+			(function (a) {
+				var buttons=controls[a].getElementsByTagName('button');
+				buttons[0].onclick=function () {
+					var sig=new signal(a+1,"running");
+					Mediator(sig);
+
+				}
+				buttons[1].onclick=function () {
+					var sig=new signal(a+1,"paused");
+					Mediator(sig);
+				}
+				buttons[2].onclick=function () {
+					var sig=new signal(a+1,1);
+					Mediator(sig);
+					num-=1;
+				}
+			})(i)
+			
+		}
+	}
+	controlf();
+	
+	
+</script>
+</body>
+</html>
